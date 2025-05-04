@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <title>Fitbit 데이터 조회</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1,
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            margin-bottom: 20px;
+        }
+
+        .login-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #00B0B9;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .login-button:hover {
+            background-color: #008C94;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #login-section {
+            text-align: center;
+            padding: 40px 0;
+            display: block;
+        }
+
+        #login-section.hidden {
+            display: none;
+        }
+
+        #data-section {
+            display: none;
+        }
+
+        #data-section.visible {
+            display: block;
+        }
+
+        .data-group {
+            margin: 25px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .data-group:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .data-group h3 {
+            margin-top: 0;
+            color: #00B0B9;
+            font-size: 1.2em;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .data-link {
+            color: #00B0B9;
+            text-decoration: none;
+            margin: 12px 0;
+            display: block;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .data-link:hover {
+            background-color: #e3f2fd;
+            color: #0056b3;
+            padding-left: 20px;
+        }
+
+        #userId {
+            font-weight: bold;
+            color: #00B0B9;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+        }
+
+        .data-description {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .data-description ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+
+        .data-description ul ul {
+            margin-left: 15px;
+        }
+
+        .data-description li {
+            margin: 3px 0;
+        }
+
+        .data-link {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .data-link:hover {
+            background-color: #0056b3;
+        }
+
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .user-id-input {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Fitbit 데이터 조회</h1>
+
+        <div id="login-section">
+            <input type="text" id="userIdInput" placeholder="사용자 ID를 입력하세요" class="user-id-input">
+            <button onclick="startLogin()" class="login-button">Fitbit으로 로그인</button>
+        </div>
+
+        <div id="data-section">
+            <h2>사용자 정보</h2>
+            <p>Fitbit 사용자 ID: <span id="userId"></span></p>
+
+            <div class="data-group">
+                <h3>Fitbit 데이터 조회</h3>
+                <a href="#" class="data-link" onclick="fetchData('devices')">1. 기기 데이터</a>
+                <div class="data-description">
+                    <ul>
+                        <li>기기 고유 ID</li>
+                        <li>기기의 모델명</li>
+                        <li>배터리 잔량</li>
+                        <li>마지막 동기화 시간</li>
+                    </ul>
+                </div>
+
+                <a href="#" class="data-link" onclick="fetchData('intraday')">2. 운동관련 Intraday 데이터 (15분)</a>
+                <div class="data-description">
+                    <ul>
+                        <li>15분 단위 걸음 수</li>
+                        <li>15분 단위 이동거리</li>
+                        <li>15분 단위 칼로리 소모량</li>
+                        <li>15분 단위 심박수 평균</li>
+                    </ul>
+                </div>
+
+                <a href="#" class="data-link" onclick="fetchData('daily-activity')">3. 하루단위 활동 데이터</a>
+                <div class="data-description">
+                    <ul>
+                        <li>하루 평균 걸음 수</li>
+                        <li>활동 강도별 시간 (가벼운/중간/높은 강도)</li>
+                        <li>활동 구간별 거리</li>
+                        <li>칼로리 소모량 (기초대사량/활동/구간별)</li>
+                    </ul>
+                </div>
+
+                <a href="#" class="data-link" onclick="fetchData('health')">4. 하루단위 건강 데이터</a>
+                <div class="data-description">
+                    <ul>
+                        <li>일일 HRV 값</li>
+                        <li>수면 중 HRV 값</li>
+                        <li>호흡률</li>
+                        <li>스트레스 지수</li>
+                        <li>피부 온도</li>
+                    </ul>
+                </div>
+
+                <a href="#" class="data-link" onclick="fetchData('sleep')">5. 수면 데이터</a>
+                <div class="data-description">
+                    <ul>
+                        <li>수면 시작/종료 시간</li>
+                        <li>수면 단계별 시간 (깊은/얕은/렘)</li>
+                        <li>깨어난 횟수 및 시간</li>
+                        <li>수면 효율</li>
+                        <li>수면 품질</li>
+                    </ul>
+                </div>
+
+                <a href="#" class="data-link" onclick="fetchData('all')">6. 모든 데이터</a>
+                <div class="data-description">
+                    <ul>
+                        <li>위의 모든 데이터를 한 번에 조회</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userId = '';
+
+        // URL에서 파라미터 가져오기
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 로그인 시작
+        function startLogin() {
+            userId = document.getElementById('userIdInput').value.trim();
+            if (!userId) {
+                alert('사용자 ID를 입력해주세요.');
+                return;
+            }
+            window.location.href = `/api/fitbit/auth?userId=${userId}`;
+        }
+
+        // 데이터 가져오기
+        async function fetchData(type) {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                let endpoint = '';
+
+                switch (type) {
+                    case 'devices':
+                        endpoint = `/api/fitbit/device/${userId}`;
+                        break;
+                    case 'intraday':
+                        endpoint = `/api/fitbit/intraday/${userId}/${today}`;
+                        break;
+                    case 'daily-activity':
+                        endpoint = `/api/fitbit/daily-activity/${userId}/${today}`;
+                        break;
+                    case 'health':
+                        endpoint = `/api/fitbit/health/${userId}/${today}`;
+                        break;
+                    case 'sleep':
+                        endpoint = `/api/fitbit/sleep/${userId}/${today}`;
+                        break;
+                    case 'all':
+                        endpoint = `/api/fitbit/all/${userId}/${today}`;
+                        break;
+                    default:
+                        throw new Error('잘못된 데이터 유형입니다.');
+                }
+
+                const response = await fetch(endpoint);
+                if (!response.ok) {
+                    throw new Error('데이터를 가져오는데 실패했습니다.');
+                }
+
+                const data = await response.json();
+
+                // 콘솔에 데이터 출력
+                console.log(`${type} 데이터:`, data);
+
+                // 새 창에서 데이터 표시
+                const dataWindow = window.open('', '_blank');
+                dataWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Fitbit ${type} 데이터</title>
+                        <meta charset="UTF-8">
+                        <style>
+                            body {
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                margin: 20px;
+                                background-color: #f5f5f5;
+                            }
+                            .container {
+                                background-color: white;
+                                padding: 20px;
+                                border-radius: 8px;
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                max-width: 1200px;
+                                margin: 0 auto;
+                            }
+                            h1 {
+                                color: #2c3e50;
+                                margin-bottom: 20px;
+                                text-align: center;
+                            }
+                            .data-section {
+                                margin-bottom: 20px;
+                                padding: 15px;
+                                background-color: #f8f9fa;
+                                border-radius: 4px;
+                            }
+                            .data-section h2 {
+                                color: #00B0B9;
+                                margin-top: 0;
+                            }
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-top: 10px;
+                            }
+                            th, td {
+                                padding: 8px;
+                                text-align: left;
+                                border-bottom: 1px solid #ddd;
+                            }
+                            th {
+                                background-color: #00B0B9;
+                                color: white;
+                            }
+                            tr:nth-child(even) {
+                                background-color: #f2f2f2;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <h1>Fitbit ${type} 데이터</h1>
+                            <div class="data-section">
+                                <h2>필드별 데이터</h2>
+                                <table>
+                                    <tr>
+                                        <th>필드</th>
+                                        <th>값</th>
+                                    </tr>
+                                    ${Object.entries(data).map(([key, value]) => {
+                    if (Array.isArray(value)) {
+                        return value.map((item, index) =>
+                            Object.entries(item).map(([itemKey, itemValue]) => `
+                                                    <tr>
+                                                        <td>${itemKey}</td>
+                                                        <td>${itemValue}</td>
+                                                    </tr>
+                                                `).join('')
+                        ).join('');
+                    }
+                    if (typeof value === 'object' && value !== null) {
+                        return Object.entries(value).map(([subKey, subValue]) => `
+                                                <tr>
+                                                    <td>${subKey}</td>
+                                                    <td>${JSON.stringify(subValue)}</td>
+                                                </tr>
+                                            `).join('');
+                    }
+                    return `
+                                            <tr>
+                                                <td>${key}</td>
+                                                <td>${JSON.stringify(value)}</td>
+                                            </tr>
+                                        `;
+                }).join('')}
+                                </table>
+                            </div>
+                            <div class="data-section">
+                                <h2>전체 JSON</h2>
+                                <pre>${JSON.stringify(data, null, 2)}</pre>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                dataWindow.document.close();
+            } catch (error) {
+                console.error('에러:', error);
+                alert('데이터 조회 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // 초기화
+        window.onload = function () {
+            const authSuccess = getUrlParameter('auth') === 'success';
+            const urlUserId = getUrlParameter('userId');
+
+            if (authSuccess && urlUserId) {
+                userId = urlUserId;
+                document.getElementById('userId').textContent = userId;
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('data-section').classList.add('visible');
+            }
+        };
+    </script>
+</body>
+
+</html>
